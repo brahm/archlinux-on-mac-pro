@@ -73,17 +73,18 @@ The installation image can be supplied to the target machine via a [USB flash dr
 
 ### Setting up the environment 
 
-#### Set the font
-
-```
-# setfont cybercafe
-```
-
 #### Set the keyboard layout
 
 ```
 # loadkeys us-acentos
 ```
+
+#### Set the default editor
+
+```
+# export EDITOR=nano
+```
+
 
 #### Update the system clock
 
@@ -153,7 +154,7 @@ sudo pacman -Syu
 Use the [pacstrap](https://man.archlinux.org/man/pacstrap.8) script to install the base package, Linux kernel and firmware for common hardware:
 
 ```
-# pacstrap /mnt base base-devel linux linux-firmware linux-headers util-linux intel-ucode dosfstools xfsprogs sudo networkmanager zsh zsh-completions zsh-syntax-highlighting git
+# pacstrap /mnt base base-devel linux linux-firmware linux-headers intel-ucode dosfstools xfsprogs sudo git
 ```
 
 #### Fstab
@@ -167,7 +168,7 @@ Generating fstab for the drives:
 Creating RAM Disk:
 
 ```
-echo "tmpfs	/tmp	tmpfs	rw,nodev,nosuid,size=3G	0 0" >> /mnt/etc/fstab
+echo "tmpfs	/tmp	tmpfs	rw,nodev,nosuid,size=2G	0 0" >> /mnt/etc/fstab
 ```
 
 Creating the swap file:
@@ -186,30 +187,6 @@ Creating the swap file:
 
 ### Configure the system
 
-#### Time zone
-
-```
-# ls -sf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime
-# hwclock --systohc --utc
-```
-
-#### Setting system wide language
-
-```
-# sed -i '/en_US.UTF-8'/s/^#//g /etc/locale.gen
-# echo LANG=en_US.UTF-8 >> /etc/locale.conf
-# echo LANGUAGE=en_US >> /etc/locale.conf
-# echo LC_ALL=C >> /etc/locale.conf
-# locale-gen
-```
-
-#### Setting font for vconsole
-
-```
-# echo "FONT=cybercafe" >> /etc/vconsole.conf
-# echo "KEYMAP=us-acentos" >> /etc/vconsole.conf
-```
-
 #### Setting machine name
 
 ```
@@ -217,6 +194,28 @@ Creating the swap file:
 # echo "127.0.0.1 localhost.localdomain	localhost" >> /etc/hosts
 # echo "::1       localhost.localdomain	localhost" >> /etc/hosts
 # echo "127.0.1.1 Discovery.localdomain	Discovery" >> /etc/hosts
+```
+
+#### Setting font for vconsole
+
+```
+# echo "KEYMAP=us-acentos" >> /etc/vconsole.conf
+```
+
+#### Setting system wide language
+
+```
+# echo LANG=en_US.UTF-8 >> /etc/locale.conf
+# echo LC_COLLATE=C >> /etc/locale.conf
+# sed -i '/#en_US.UTF-8/s/^#//g' /etc/locale.gen
+# locale-gen
+```
+
+#### Time zone
+
+```
+# ls -sf /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime
+# hwclock --systohc --utc
 ```
 
 #### Setting modules
@@ -234,12 +233,6 @@ Creating the swap file:
 # echo QT_IM_MODULE=cedilla >> /etc/environment
 ```
 
-#### Giving user wheel access
-
-```
-# sed -i '/%wheel ALL=(ALL) NOPASSWD: ALL'/s/^#//g /etc/sudoers
-```
-
 #### Set root password
 
 ```
@@ -253,9 +246,17 @@ Creating the swap file:
 # passwd MYUSERNAME
 ```
 
+#### Giving user wheel access
 
+```
+# sed -i '/%wheel ALL=(ALL) NOPASSWD: ALL'/s/^#//g /etc/sudoers
+```
 
+#### Installing the bootloader
 
+```
+# pacstrap grub
+```
 
 
 
