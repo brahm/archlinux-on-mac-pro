@@ -26,7 +26,7 @@ This guide walks you through the process of installing Arch Linux 2021.04.01 on 
 - Storage: 1 TB SSD / 3 TB HDD
 - Video Card: AMD Radeon RX 580 8 GB VRAM
 - Standard Ethernet: 2 Gigabit 10/100/1000BASE-T
-- Wireless: AirPort Extreme (802.11a/b/g/n) and Bluetooth 2.1+EDR is standard
+- Wireless: AirPort Extreme (802.11a/b/g/n) and Bluetooth 2.1+EDR
 - Optical: 18x DL "Superdrive"
 
 
@@ -140,10 +140,18 @@ Use cfdisk to partition the disk using the following layout:
 # reflector --verbose --latest 50 --protocol https --threads 24 --sort rate --save /tmp/mirrorlist.new
 # rankmirrors -n 0 /tmp/mirrorlist.new > /tmp/mirrorlist && sudo cp /tmp/mirrorlist /etc/pacman.d/
 # cat /etc/pacman.d/mirrorlist
-sudo pacman -Syu
 ```
 
+#### Update the keyring
 
+```
+# pacman -Syyu
+# pacman -S archlinux-keyring
+# pacman-key --init
+# pacman-key --populate archlinux
+# pacman-key --refresh-keys
+# pacman -Syyuu
+```
 
 ## Installation
 
@@ -154,7 +162,7 @@ sudo pacman -Syu
 Use the [pacstrap](https://man.archlinux.org/man/pacstrap.8) script to install the base package, Linux kernel and firmware for common hardware:
 
 ```
-# pacstrap /mnt base base-devel linux linux-firmware linux-headers intel-ucode dosfstools xfsprogs sudo git
+# pacstrap /mnt base linux linux-firmware linux-headers intel-ucode dosfstools xfsprogs sudo zsh
 ```
 
 #### Fstab
@@ -256,17 +264,101 @@ Creating the swap file:
 
 ```
 # pacstrap grub
+# pacstrap efibootmgr
+# mkdir /boot/grub
+# grub-mkconfig -o /boot/grub/grub.conf
+# grub-install --target=x86_64-efi --efi-directory=/boot --recheck /dev/sda
 ```
 
 
+### Extra packages
+
+#### System utilities
+
+```
+# pacman -S --needed man-pages man-db bash-completion zsh-completions zsh-syntax-highlighting zsh-autosuggestions nano base-devel git pacman-contrib  usbutils lsof dmidecode dialog mc neofetch fwupd powertop gpm htop zip unzip unrar p7zip lzop lm_sensors imv bat fzf jq
+```
+
+#### Some network tools
+
+```
+# pacman -S --needed rsync traceroute bind-tools nmap speedtest-cli wavemon net-tools 
+```
+
+#### Install AUR package manager (yay)
+
+```
+# git clone https://aur.archlinux.org/yay.git
+# cd yay
+# makepkg -si
+```
+
+#### Install the missing modules
+
+```
+# yay -Syu aic94xx-firmware wd719x-firmware upd72020x-fw
+```
+
+#### Install the Broadcom module
+
+```
+# pacman -Syu broadcom-wl-dkms
+```
+
+#### Install and enable system services
+
+```
+# pacman -S --needed networkmanager openssh cronie xdg-user-dirs haveged samba bluez bluez-libs ntp
+# systemctl enable NetworkManager
+# systemctl enable NetworkManager-dispatcher.service
+# systemctl enable sshd
+# systemctl enable cronie
+# systemctl enable haveged
+# systemctl enable bluetooth
+# systemctl enable ntpd
+# systemctl enable man-db.timer
+# systemctl enable fstrim.timer
+# systemctl start fstrim.timer
+# systemctl start fstrim.service
+# systemctl disable systemd-resolved.service
+# systemctl enable avahi-daemon.service
+# systemctl start 
 
 
+# sudo nano /etc/systemd/system/powertop.service
+```
 
+Uncomment the profile of choice, then start enable the service
 
+```
+# systemctl enable powertop
+```
 
+### Last Configs
 
+```
+# nano /etc/mkinitcpio.conf
+```
+Edit this line:
+HOOKS="base udev resume autodetect modconf block filesystems keyboard fsck"
+run
+```
+# mkinitcpio -p linux
+```
+```
+# nano /etc/default/grub
+```
+GRUB_CMDLINE_LINUX_DEFAULT='quiet resume=/swapfile'
 
+```
+# nano /etc/default/grub
+```
+grub-mkconfig -o /boot/grub/grub.cfg
+
+```
+# umount -R /mnt
+# reboot
+```
 
 
 [logo]: https://archlinux.org/static/logos/archlinux-logo-black-90dpi.0c696e9c0d84.png "Arch Linux"
-
